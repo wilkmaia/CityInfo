@@ -12,11 +12,13 @@ public class PointsOfInterestController : ControllerBase
 {
     private readonly ILogger<PointsOfInterestController> _logger;
     private readonly IMailService _mailer;
+    private readonly CitiesDataStore _citiesDataStore;
 
-    public PointsOfInterestController(ILogger<PointsOfInterestController> logger, IMailService mailer)
+    public PointsOfInterestController(ILogger<PointsOfInterestController> logger, IMailService mailer, CitiesDataStore citiesDataStore)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _mailer = mailer ?? throw new ArgumentNullException(nameof(mailer));
+        _citiesDataStore = citiesDataStore ?? throw new ArgumentNullException(nameof(citiesDataStore));
     }
     
     [HttpGet]
@@ -24,7 +26,7 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            var city = CitiesDataStore.Current.Cities.Find(city => city.Id == cityId);
+            var city = _citiesDataStore.Cities.Find(city => city.Id == cityId);
             if (city == null)
             {
                 _logger.LogInformation($"City with id {cityId} wasn't found");
@@ -46,7 +48,7 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            var city = CitiesDataStore.Current.Cities.Find(city => city.Id == cityId);
+            var city = _citiesDataStore.Cities.Find(city => city.Id == cityId);
             if (city == null)
             {
                 return NotFound();
@@ -75,14 +77,14 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(city => city.Id == cityId);
+            var city = _citiesDataStore.Cities.FirstOrDefault(city => city.Id == cityId);
             if (city == null)
             {
                 return NotFound();
             }
 
             // TODO - update approach when database is added to project
-            int nextPointOfInterestId = CitiesDataStore.Current.Cities
+            int nextPointOfInterestId = _citiesDataStore.Cities
                 .SelectMany(c => c.PointsOfInterest)
                 .Max(p => p.Id) + 1;
 
@@ -121,7 +123,7 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(city => city.Id == cityId);
+            var city = _citiesDataStore.Cities.FirstOrDefault(city => city.Id == cityId);
             if (city == null)
             {
                 return NotFound();
@@ -154,7 +156,7 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(city => city.Id == cityId);
+            var city = _citiesDataStore.Cities.FirstOrDefault(city => city.Id == cityId);
             if (city == null)
             {
                 return NotFound();
@@ -195,7 +197,7 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(city => city.Id == cityId);
+            var city = _citiesDataStore.Cities.FirstOrDefault(city => city.Id == cityId);
             if (city == null)
             {
                 return NotFound();
