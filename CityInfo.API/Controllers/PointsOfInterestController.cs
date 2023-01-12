@@ -1,6 +1,7 @@
 ﻿using CityInfo.API.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace CityInfo.API.Controllers;
 
@@ -18,32 +19,49 @@ public class PointsOfInterestController : ControllerBase
     [HttpGet]
     public ActionResult<IEnumerable<PointOfInterestDto>> GetPointsOfInterest(int cityId)
     {
-        var city = CitiesDataStore.Current.Cities.Find(city => city.Id == cityId);
-        if (city == null)
+        try
         {
-            _logger.LogDebug($"City with id {cityId} wasn't found");
-            return NotFound();
-        }
+            var city = CitiesDataStore.Current.Cities.Find(city => city.Id == cityId);
+            if (city == null)
+            {
+                _logger.LogDebug($"City with id {cityId} wasn't found");
+                return NotFound();
+            }
 
-        return Ok(city.PointsOfInterest);
+            return Ok(city.PointsOfInterest);
+        }
+        catch (Exception e)
+        {
+            
+            _logger.LogCritical(e, $"Exception while getting points of interest for city with id {cityId}.");
+            return StatusCode(500, "Internal server error");
+        }
     }
 
     [HttpGet("{poiId}", Name = "GetPointOfInterestById")]
     public ActionResult<PointOfInterestDto> GetPointOfInterestById(int cityId, int poiId)
     {
-        var city = CitiesDataStore.Current.Cities.Find(city => city.Id == cityId);
-        if (city == null)
+        try
         {
-            return NotFound();
-        }
+            var city = CitiesDataStore.Current.Cities.Find(city => city.Id == cityId);
+            if (city == null)
+            {
+                return NotFound();
+            }
 
-        var poi = city.PointsOfInterest.FirstOrDefault(poi => poi.Id == poiId);
-        if (poi == null)
+            var poi = city.PointsOfInterest.FirstOrDefault(poi => poi.Id == poiId);
+            if (poi == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(poi);
+        }
+        catch (Exception e)
         {
-            return NotFound();
+            _logger.LogCritical(e, $"Exception while getting point of interest {poiId} for city with id {cityId}.");
+            return StatusCode(500, "Internal server error");
         }
-
-        return Ok(poi);
     }
 
     [HttpPost]
@@ -52,35 +70,43 @@ public class PointsOfInterestController : ControllerBase
         [FromBody] PointOfInterestForCreationDto poi
     )
     {
-        var city = CitiesDataStore.Current.Cities.FirstOrDefault(city => city.Id == cityId);
-        if (city == null)
+        try
         {
-            return NotFound();
-        }
-
-        // TODO - update approach when database is added to project
-        int nextPointOfInterestId = CitiesDataStore.Current.Cities
-            .SelectMany(c => c.PointsOfInterest)
-            .Max(p => p.Id) + 1;
-
-        var pointOfInterest = new PointOfInterestDto()
-        {
-            Id = nextPointOfInterestId,
-            Name = poi.Name,
-            Description = poi.Description,
-        };
-        
-        city.PointsOfInterest.Add(pointOfInterest);
-
-        return CreatedAtRoute(
-            "GetPointOfInterestById", 
-            new
+            var city = CitiesDataStore.Current.Cities.FirstOrDefault(city => city.Id == cityId);
+            if (city == null)
             {
-                cityId,
-                poiId = pointOfInterest.Id,
-            },
-            pointOfInterest
-        );
+                return NotFound();
+            }
+
+            // TODO - update approach when database is added to project
+            int nextPointOfInterestId = CitiesDataStore.Current.Cities
+                .SelectMany(c => c.PointsOfInterest)
+                .Max(p => p.Id) + 1;
+
+            var pointOfInterest = new PointOfInterestDto()
+            {
+                Id = nextPointOfInterestId,
+                Name = poi.Name,
+                Description = poi.Description,
+            };
+        
+            city.PointsOfInterest.Add(pointOfInterest);
+
+            return CreatedAtRoute(
+                "GetPointOfInterestById", 
+                new
+                {
+                    cityId,
+                    poiId = pointOfInterest.Id,
+                },
+                pointOfInterest
+            );
+        }
+        catch (Exception e)
+        {
+            _logger.LogCritical(e, $"Exception while creating point of interest for city with id {cityId}.");
+            return StatusCode(500, "Internal server error");
+        }
     }
     
     [HttpPut("{poiId}")]
@@ -90,22 +116,30 @@ public class PointsOfInterestController : ControllerBase
         [FromBody] PointOfInterestForUpdateDto poi
     )
     {
-        var city = CitiesDataStore.Current.Cities.FirstOrDefault(city => city.Id == cityId);
-        if (city == null)
+        try
         {
-            return NotFound();
-        }
+            var city = CitiesDataStore.Current.Cities.FirstOrDefault(city => city.Id == cityId);
+            if (city == null)
+            {
+                return NotFound();
+            }
 
-        var pointOfInterest = city.PointsOfInterest.FirstOrDefault(p => p.Id == poiId);
-        if (pointOfInterest == null)
+            var pointOfInterest = city.PointsOfInterest.FirstOrDefault(p => p.Id == poiId);
+            if (pointOfInterest == null)
+            {
+                return NotFound();
+            }
+
+            pointOfInterest.Name = poi.Name;
+            pointOfInterest.Description = poi.Description;
+
+            return NoContent();
+        }
+        catch (Exception e)
         {
-            return NotFound();
+            _logger.LogCritical(e, $"Exception while updating point of interest {poiId} for city with id {cityId}.");
+            return StatusCode(500, "Internal server error");
         }
-
-        pointOfInterest.Name = poi.Name;
-        pointOfInterest.Description = poi.Description;
-
-        return NoContent();
     }
 
     [HttpPatch("{poiId}")]
@@ -115,52 +149,68 @@ public class PointsOfInterestController : ControllerBase
         [FromBody] JsonPatchDocument<PointOfInterestForUpdateDto> patchDocument
     )
     {
-        var city = CitiesDataStore.Current.Cities.FirstOrDefault(city => city.Id == cityId);
-        if (city == null)
+        try
         {
-            return NotFound();
-        }
+            var city = CitiesDataStore.Current.Cities.FirstOrDefault(city => city.Id == cityId);
+            if (city == null)
+            {
+                return NotFound();
+            }
 
-        var pointOfInterest = city.PointsOfInterest.FirstOrDefault(p => p.Id == poiId);
-        if (pointOfInterest == null)
-        {
-            return NotFound();
-        }
+            var pointOfInterest = city.PointsOfInterest.FirstOrDefault(p => p.Id == poiId);
+            if (pointOfInterest == null)
+            {
+                return NotFound();
+            }
 
-        var poi = new PointOfInterestForUpdateDto()
-        {
-            Name = pointOfInterest.Name,
-            Description = pointOfInterest.Description,
-        };
+            var poi = new PointOfInterestForUpdateDto()
+            {
+                Name = pointOfInterest.Name,
+                Description = pointOfInterest.Description,
+            };
         
-        patchDocument.ApplyTo(poi, ModelState);
-        if (!ModelState.IsValid || !TryValidateModel(poi))
-        {
-            return BadRequest(ModelState);
+            patchDocument.ApplyTo(poi, ModelState);
+            if (!ModelState.IsValid || !TryValidateModel(poi))
+            {
+                return BadRequest(ModelState);
+            }
+
+            pointOfInterest.Name = poi.Name;
+            pointOfInterest.Description = poi.Description;
+
+            return NoContent();
         }
-
-        pointOfInterest.Name = poi.Name;
-        pointOfInterest.Description = poi.Description;
-
-        return NoContent();
+        catch (Exception e)
+        {
+            _logger.LogCritical(e, $"Exception while patching point of interest {poiId} for city with id {cityId}.");
+            return StatusCode(500, "Internal server error");
+        }
     }
 
     [HttpDelete("{poiId}")]
     public ActionResult DeletePointOfInterest(int cityId, int poiId)
     {
-        var city = CitiesDataStore.Current.Cities.FirstOrDefault(city => city.Id == cityId);
-        if (city == null)
+        try
         {
-            return NotFound();
-        }
+            var city = CitiesDataStore.Current.Cities.FirstOrDefault(city => city.Id == cityId);
+            if (city == null)
+            {
+                return NotFound();
+            }
 
-        var pointOfInterest = city.PointsOfInterest.FirstOrDefault(p => p.Id == poiId);
-        if (pointOfInterest == null)
+            var pointOfInterest = city.PointsOfInterest.FirstOrDefault(p => p.Id == poiId);
+            if (pointOfInterest == null)
+            {
+                return NotFound();
+            }
+
+            city.PointsOfInterest.Remove(pointOfInterest);
+            return NoContent();
+        }
+        catch (Exception e)
         {
-            return NotFound();
+            _logger.LogCritical(e, $"Exception while deleting point of interest {poiId} for city with id {cityId}.");
+            return StatusCode(500, "Internal server error");
         }
-
-        city.PointsOfInterest.Remove(pointOfInterest);
-        return NoContent();
     }
 }
