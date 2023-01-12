@@ -21,6 +21,8 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
+            throw new Exception("Test");
+            
             var city = CitiesDataStore.Current.Cities.Find(city => city.Id == cityId);
             if (city == null)
             {
