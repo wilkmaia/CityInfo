@@ -1,6 +1,10 @@
 ﻿# Binaries
 obj
 bin
+*.db*
 
 # Logs
 logs
+
+#.idea
+.idea

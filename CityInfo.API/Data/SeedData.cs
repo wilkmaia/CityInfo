@@ -1,14 +1,17 @@
 ﻿using CityInfo.API.Models;
 
-namespace CityInfo.API;
+namespace CityInfo.API.Data;
 
-public class CitiesDataStore
+public static class SeedData
 {
-    public List<CityDto> Cities { get; set; }
-    
-    public CitiesDataStore()
+    public static void Initialize(DatabaseContext context)
     {
-        Cities = new List<CityDto>()
+        if (context.Cities.Any() && context.PointsOfInterest.Any())
+        {
+            return;
+        }
+        
+        var cities = new List<CityDto>()
         {
             new CityDto()
             {
@@ -73,5 +76,8 @@ public class CitiesDataStore
                 },
             },
         };
+        
+        context.Cities.AddRange(cities);
+        context.SaveChanges();
     }
 }
