@@ -6,7 +6,7 @@ public static class Extensions
     {
         using var scope = host.Services.CreateScope();
         var services = scope.ServiceProvider;
-        var context = services.GetRequiredService<DatabaseContext>();
+        var context = services.GetRequiredService<CityInfoContext>();
         context.Database.EnsureCreated();
         SeedData.Initialize(context);
     }

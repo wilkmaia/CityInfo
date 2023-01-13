@@ -13,13 +13,13 @@ public class PointsOfInterestController : ControllerBase
 {
     private readonly ILogger<PointsOfInterestController> _logger;
     private readonly IMailService _mailer;
-    private readonly CityInfoService _cityInfoService;
+    private readonly CityInfoRepository _cityInfoRepository;
 
-    public PointsOfInterestController(ILogger<PointsOfInterestController> logger, IMailService mailer, CityInfoService cityInfoService)
+    public PointsOfInterestController(ILogger<PointsOfInterestController> logger, IMailService mailer, CityInfoRepository cityInfoRepository)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _mailer = mailer ?? throw new ArgumentNullException(nameof(mailer));
-        _cityInfoService = cityInfoService ?? throw new ArgumentNullException(nameof(cityInfoService));
+        _cityInfoRepository = cityInfoRepository ?? throw new ArgumentNullException(nameof(cityInfoRepository));
     }
     
     [HttpGet]
@@ -27,7 +27,7 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            var city = await _cityInfoService.GetCityById(cityId);
+            var city = await _cityInfoRepository.GetCityById(cityId);
             return Ok(city.PointsOfInterest);
         }
         catch (INotFoundException)
@@ -48,7 +48,7 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            var poi = await _cityInfoService.GetPointOfInterestForCityById(cityId, poiId);
+            var poi = await _cityInfoRepository.GetPointOfInterestForCityById(cityId, poiId);
             return Ok(poi);
         }
         catch (INotFoundException)
@@ -70,7 +70,7 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            var pointOfInterest = await _cityInfoService.CreatePointOfInterestForCity(cityId, poi);
+            var pointOfInterest = await _cityInfoRepository.CreatePointOfInterestForCity(cityId, poi);
             return CreatedAtRoute(
                 "GetPointOfInterestById", 
                 new
@@ -101,7 +101,7 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            await _cityInfoService.UpdatePointOfInterest(cityId, poiId, poi);
+            await _cityInfoRepository.UpdatePointOfInterest(cityId, poiId, poi);
             return NoContent();
         }
         catch (INotFoundException)
@@ -124,7 +124,7 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            var pointOfInterest = await _cityInfoService.GetPointOfInterestForCityById(cityId, poiId, true);
+            var pointOfInterest = await _cityInfoRepository.GetPointOfInterestForCityById(cityId, poiId);
             var poi = new PointOfInterestForUpdateDto()
             {
                 Name = pointOfInterest.Name,
@@ -137,7 +137,7 @@ public class PointsOfInterestController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            await _cityInfoService.UpdatePointOfInterest(pointOfInterest, poi);
+            await _cityInfoRepository.UpdatePointOfInterest(cityId, poiId, poi);
 
             return NoContent();
         }
@@ -157,7 +157,7 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            await _cityInfoService.DeletePointOfInterest(cityId, poiId);
+            await _cityInfoRepository.DeletePointOfInterest(cityId, poiId);
             
             _mailer.Send("Point of Interest Deleted", $"POI with id {poiId} for city with id {cityId} has been deleted.");
             

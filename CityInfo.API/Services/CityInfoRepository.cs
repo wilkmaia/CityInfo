@@ -1,34 +1,34 @@
-﻿using System.Drawing;
+﻿using AutoMapper;
 using CityInfo.API.Data;
+using CityInfo.API.Entities;
 using CityInfo.API.Exceptions;
 using CityInfo.API.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
-using Microsoft.EntityFrameworkCore.Query;
 
 namespace CityInfo.API.Services;
 
-public class CityInfoService
+public class CityInfoRepository
 {
-    private readonly DatabaseContext _dbContext;
+    private readonly CityInfoContext _context;
+    private readonly IMapper _mapper;
 
-    public CityInfoService(DatabaseContext dbContext)
+    public CityInfoRepository(CityInfoContext context, IMapper mapper)
     {
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
-    public Task<List<CityDto>> GetAllCities()
+    public async Task<List<CityDto>> GetAllCities()
     {
-        return _dbContext.Cities
+        return _mapper.Map<List<CityDto>>(await _context.Cities
             .Include(c => c.PointsOfInterest)
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync());
     }
 
     public async Task<CityDto> GetCityById(int cityId, bool track = false)
     {
-        var query = track ? _dbContext.Cities : _dbContext.Cities.AsNoTracking();
+        var query = track ? _context.Cities : _context.Cities.AsNoTracking();
         var city = await query
             .Include(c => c.PointsOfInterest)
             .SingleOrDefaultAsync(c => c.Id == cityId);
@@ -37,12 +37,12 @@ public class CityInfoService
             throw new CityNotFoundException("Id", cityId.ToString());
         }
 
-        return city;
+        return _mapper.Map<CityDto>(city);
     }
 
     public async Task<List<PointOfInterestDto>> GetAllPointsOfInterestForCity(int cityId)
     {
-        var city = await _dbContext.Cities
+        var city = await _context.Cities
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == cityId);
         if (city == null)
@@ -50,12 +50,12 @@ public class CityInfoService
             throw new CityNotFoundException("Id", cityId.ToString());
         }
 
-        return city.PointsOfInterest.ToList();
+        return _mapper.Map<List<PointOfInterestDto>>(city.PointsOfInterest.ToList());
     }
 
     public async Task<PointOfInterestDto> GetPointOfInterestById(int poiId)
     {
-        var pointOfInterest = await _dbContext.PointsOfInterest
+        var pointOfInterest = await _context.PointsOfInterest
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == poiId);
         if (pointOfInterest == null)
@@ -63,12 +63,12 @@ public class CityInfoService
             throw new PointOfInterestNotFoundException("Id", poiId.ToString());
         }
 
-        return pointOfInterest;
+        return _mapper.Map<PointOfInterestDto>(pointOfInterest);
     }
 
     public async Task<PointOfInterestDto> GetPointOfInterestForCityById(int cityId, int poiId, bool track = false)
     {
-        var query = track ? _dbContext.Cities : _dbContext.Cities.AsNoTracking();
+        var query = track ? _context.Cities : _context.Cities.AsNoTracking();
         var city = await query
             .Include(c => c.PointsOfInterest)
             .FirstOrDefaultAsync(c => c.Id == cityId);
@@ -83,54 +83,42 @@ public class CityInfoService
             throw new PointOfInterestNotFoundException("Id", poiId.ToString());
         }
 
-        return pointOfInterest;
+        return _mapper.Map<PointOfInterestDto>(pointOfInterest);
     }
 
     public async Task<PointOfInterestDto> CreatePointOfInterestForCity(int cityId, PointOfInterestForCreationDto poi)
     {
-        var city = await GetCityById(cityId, true);
-        if (city == null)
-        {
-            throw new CityNotFoundException("Id", cityId.ToString());
-        }
-        
-        var entry = new PointOfInterestDto()
+        var entry = new PointOfInterest(poi.Name)
         {
             Description = poi.Description,
-            Name = poi.Name,
+            CityId = cityId,
         };
-        var pointOfInterest = _dbContext.PointsOfInterest
+        var pointOfInterest = _context.PointsOfInterest
             .Add(entry);
-        city.PointsOfInterest.Add(pointOfInterest.Entity);
-        Console.WriteLine(city.NumberOfPointsOfInterest);
-        Console.WriteLine(pointOfInterest.Entity);
-        await _dbContext.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
-        return pointOfInterest.Entity;
+        return _mapper.Map<PointOfInterestDto>(pointOfInterest.Entity);
     }
 
     public async Task UpdatePointOfInterest(int cityId, int poiId, PointOfInterestForUpdateDto poi)
     {
-        
-        var pointOfInterest = await GetPointOfInterestForCityById(cityId, poiId, true);
-        pointOfInterest.Name = poi.Name;
-        pointOfInterest.Description = poi.Description;
-        await _dbContext.SaveChangesAsync();
-    }
+        var pointOfInterest = await _context.PointsOfInterest
+            .Where(p => p.CityId == cityId && p.Id == poiId)
+            .FirstOrDefaultAsync();
+        if (pointOfInterest == null)
+        {
+            throw new PointOfInterestNotFoundException("Id", poiId.ToString());
+        }
 
-    public async Task UpdatePointOfInterest(PointOfInterestDto pointOfInterest, PointOfInterestForUpdateDto poi)
-    {
-        
-        pointOfInterest.Name = poi.Name;
-        pointOfInterest.Description = poi.Description;
-        await _dbContext.SaveChangesAsync();
+        _mapper.Map(poi, pointOfInterest);
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeletePointOfInterest(int cityId, int poiId)
     {
-        
-        var pointOfInterest = await GetPointOfInterestForCityById(cityId, poiId, true);
-        _dbContext.PointsOfInterest.Remove(pointOfInterest);
-        await _dbContext.SaveChangesAsync();
+        await _context.PointsOfInterest
+            .Where(p => p.CityId == cityId && p.Id == poiId)
+            .ExecuteDeleteAsync();
+        await _context.SaveChangesAsync();
     }
 }

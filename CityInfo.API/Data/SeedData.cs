@@ -1,76 +1,67 @@
-﻿using CityInfo.API.Models;
+﻿using CityInfo.API.Entities;
 
 namespace CityInfo.API.Data;
 
 public static class SeedData
 {
-    public static void Initialize(DatabaseContext context)
+    public static void Initialize(CityInfoContext context)
     {
         if (context.Cities.Any() && context.PointsOfInterest.Any())
         {
             return;
         }
         
-        var cities = new List<CityDto>()
+        var cities = new List<City>()
         {
-            new CityDto()
+            new City("Teresina")
             {
                 Id = 1,
-                Name = "Teresina",
                 Description = "Capital do Piauí",
-                PointsOfInterest = new List<PointOfInterestDto>()
+                PointsOfInterest = new List<PointOfInterest>()
                 {
-                    new PointOfInterestDto()
+                    new PointOfInterest("POI-1")
                     {
                         Id = 1,
-                        Name = "POI-1",
                         Description = "Point of Interest 1",
                     },
-                    new PointOfInterestDto()
+                    new PointOfInterest("POI-2")
                     {
                         Id = 2,
-                        Name = "POI-2",
                         Description = "Point of Interest 2",
                     },
                 },
             },
-            new CityDto()
+            new City("Timon")
             {
                 Id = 2,
-                Name = "Timon",
                 Description = "Quintal de Teresina",
-                PointsOfInterest = new List<PointOfInterestDto>()
+                PointsOfInterest = new List<PointOfInterest>()
                 {
-                    new PointOfInterestDto()
+                    new PointOfInterest("POI-3")
                     {
                         Id = 3,
-                        Name = "POI-3",
                         Description = "Point of Interest 3",
                     },
-                    new PointOfInterestDto()
+                    new PointOfInterest("POI-4")
                     {
                         Id = 4,
-                        Name = "POI-4",
                         Description = "Point of Interest 4",
                     },
                 },
             },
-            new CityDto()
+            new City("São João dos Patos")
             {
                 Id = 3,
-                Name = "São João dos Patos",
-                PointsOfInterest = new List<PointOfInterestDto>()
+                PointsOfInterest = new List<PointOfInterest>()
                 {
-                    new PointOfInterestDto()
+                    new PointOfInterest("POI-5")
                     {
                         Id = 5,
-                        Name = "POI-5",
                         Description = "Point of Interest 5",
                     },
-                    new PointOfInterestDto()
+                    new PointOfInterest("POI-6")
                     {
                         Id = 6,
-                        Name = "POI-6",
                         Description = "Point of Interest 6",
                     },
                 },

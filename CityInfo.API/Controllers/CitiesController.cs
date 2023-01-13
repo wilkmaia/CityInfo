@@ -9,17 +9,17 @@ namespace CityInfo.API.Controllers;
 [Route("api/cities")]
 public class CitiesController : ControllerBase
 {
-    private readonly CityInfoService _cityInfoService;
+    private readonly CityInfoRepository _cityInfoRepository;
     
-    public CitiesController(CityInfoService cityInfoService)
+    public CitiesController(CityInfoRepository cityInfoRepository)
     {
-        _cityInfoService = cityInfoService ?? throw new ArgumentNullException(nameof(cityInfoService));
+        _cityInfoRepository = cityInfoRepository ?? throw new ArgumentNullException(nameof(cityInfoRepository));
     }
     
     [HttpGet]
     public async Task<ActionResult<IEnumerator<CityDto>>> GetCities()
     {
-        return Ok(await _cityInfoService.GetAllCities());
+        return Ok(await _cityInfoRepository.GetAllCities());
     }
 
     [HttpGet("{id}")]
@@ -27,7 +27,7 @@ public class CitiesController : ControllerBase
     {
         try
         {
-            CityDto city = await _cityInfoService.GetCityById(id);
+            CityDto city = await _cityInfoRepository.GetCityById(id);
             return Ok(city);
         }
         catch (CityNotFoundException)
