@@ -1,4 +1,6 @@
-﻿using CityInfo.API.Models;
+﻿using CityInfo.API.Exceptions;
+using CityInfo.API.Models;
+using CityInfo.API.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CityInfo.API.Controllers;
@@ -7,28 +9,30 @@ namespace CityInfo.API.Controllers;
 [Route("api/cities")]
 public class CitiesController : ControllerBase
 {
-    private readonly CitiesDataStore _citiesDataStore;
+    private readonly CityInfoService _cityInfoService;
     
-    public CitiesController(CitiesDataStore citiesDataStore)
+    public CitiesController(CityInfoService cityInfoService)
     {
-        _citiesDataStore = citiesDataStore ?? throw new ArgumentNullException(nameof(citiesDataStore));
+        _cityInfoService = cityInfoService ?? throw new ArgumentNullException(nameof(cityInfoService));
     }
     
     [HttpGet]
-    public ActionResult<IEnumerator<CityDto>> GetCities()
+    public async Task<ActionResult<IEnumerator<CityDto>>> GetCities()
     {
-        return Ok(_citiesDataStore.Cities);
+        return Ok(await _cityInfoService.GetAllCities());
     }
 
     [HttpGet("{id}")]
-    public ActionResult<CityDto> GetCity(int id)
+    public async Task<ActionResult<CityDto>> GetCity(int id)
     {
-        CityDto? city = _citiesDataStore.Cities.Find(city => city.Id == id);
-        if (city == null)
+        try
+        {
+            CityDto city = await _cityInfoService.GetCityById(id);
+            return Ok(city);
+        }
+        catch (CityNotFoundException)
         {
             return NotFound();
         }
-        
-        return Ok(city);
     }
 }

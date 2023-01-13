@@ -40,13 +40,16 @@ builder.Services.AddTransient<IMailService, LocalMailService>();
 builder.Services.AddTransient<IMailService, CloudMailService>();
 #endif
 
-builder.Services.AddSingleton<CitiesDataStore>();
+builder.Services.AddTransient<CityInfoService>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    // Ensure database exists and seed it if needed
+    app.CreateDbIfNotExists();
+    
     app.UseSwagger();
     app.UseSwaggerUI();
 }

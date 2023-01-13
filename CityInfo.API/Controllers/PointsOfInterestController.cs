@@ -1,4 +1,5 @@
-﻿using CityInfo.API.Models;
+﻿using CityInfo.API.Exceptions;
+using CityInfo.API.Models;
 using CityInfo.API.Services;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -12,28 +13,27 @@ public class PointsOfInterestController : ControllerBase
 {
     private readonly ILogger<PointsOfInterestController> _logger;
     private readonly IMailService _mailer;
-    private readonly CitiesDataStore _citiesDataStore;
+    private readonly CityInfoService _cityInfoService;
 
-    public PointsOfInterestController(ILogger<PointsOfInterestController> logger, IMailService mailer, CitiesDataStore citiesDataStore)
+    public PointsOfInterestController(ILogger<PointsOfInterestController> logger, IMailService mailer, CityInfoService cityInfoService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _mailer = mailer ?? throw new ArgumentNullException(nameof(mailer));
-        _citiesDataStore = citiesDataStore ?? throw new ArgumentNullException(nameof(citiesDataStore));
+        _cityInfoService = cityInfoService ?? throw new ArgumentNullException(nameof(cityInfoService));
     }
     
     [HttpGet]
-    public ActionResult<IEnumerable<PointOfInterestDto>> GetPointsOfInterest(int cityId)
+    public async Task<ActionResult<IEnumerable<PointOfInterestDto>>> GetPointsOfInterest(int cityId)
     {
         try
         {
-            var city = _citiesDataStore.Cities.Find(city => city.Id == cityId);
-            if (city == null)
-            {
-                _logger.LogInformation($"City with id {cityId} wasn't found");
-                return NotFound();
-            }
-
+            var city = await _cityInfoService.GetCityById(cityId);
             return Ok(city.PointsOfInterest);
+        }
+        catch (INotFoundException)
+        {
+            _logger.LogInformation($"City with id {cityId} wasn't found");
+            return NotFound();
         }
         catch (Exception e)
         {
@@ -44,23 +44,16 @@ public class PointsOfInterestController : ControllerBase
     }
 
     [HttpGet("{poiId}", Name = "GetPointOfInterestById")]
-    public ActionResult<PointOfInterestDto> GetPointOfInterestById(int cityId, int poiId)
+    public async Task<ActionResult<PointOfInterestDto>> GetPointOfInterestById(int cityId, int poiId)
     {
         try
         {
-            var city = _citiesDataStore.Cities.Find(city => city.Id == cityId);
-            if (city == null)
-            {
-                return NotFound();
-            }
-
-            var poi = city.PointsOfInterest.FirstOrDefault(poi => poi.Id == poiId);
-            if (poi == null)
-            {
-                return NotFound();
-            }
-
+            var poi = await _cityInfoService.GetPointOfInterestForCityById(cityId, poiId);
             return Ok(poi);
+        }
+        catch (INotFoundException)
+        {
+            return NotFound();
         }
         catch (Exception e)
         {
@@ -70,33 +63,14 @@ public class PointsOfInterestController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<PointOfInterestDto> CreatePointOfInterest(
+    public async Task<ActionResult<PointOfInterestDto>> CreatePointOfInterest(
         int cityId,
         [FromBody] PointOfInterestForCreationDto poi
     )
     {
         try
         {
-            var city = _citiesDataStore.Cities.FirstOrDefault(city => city.Id == cityId);
-            if (city == null)
-            {
-                return NotFound();
-            }
-
-            // TODO - update approach when database is added to project
-            int nextPointOfInterestId = _citiesDataStore.Cities
-                .SelectMany(c => c.PointsOfInterest)
-                .Max(p => p.Id) + 1;
-
-            var pointOfInterest = new PointOfInterestDto()
-            {
-                Id = nextPointOfInterestId,
-                Name = poi.Name,
-                Description = poi.Description,
-            };
-        
-            city.PointsOfInterest.Add(pointOfInterest);
-
+            var pointOfInterest = await _cityInfoService.CreatePointOfInterestForCity(cityId, poi);
             return CreatedAtRoute(
                 "GetPointOfInterestById", 
                 new
@@ -107,6 +81,10 @@ public class PointsOfInterestController : ControllerBase
                 pointOfInterest
             );
         }
+        catch (INotFoundException)
+        {
+            return NotFound();
+        }
         catch (Exception e)
         {
             _logger.LogCritical(e, $"Exception while creating point of interest for city with id {cityId}.");
@@ -115,7 +93,7 @@ public class PointsOfInterestController : ControllerBase
     }
     
     [HttpPut("{poiId}")]
-    public ActionResult UpdatePointOfInterest(
+    public async Task<ActionResult> UpdatePointOfInterest(
         int cityId,
         int poiId,
         [FromBody] PointOfInterestForUpdateDto poi
@@ -123,22 +101,12 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            var city = _citiesDataStore.Cities.FirstOrDefault(city => city.Id == cityId);
-            if (city == null)
-            {
-                return NotFound();
-            }
-
-            var pointOfInterest = city.PointsOfInterest.FirstOrDefault(p => p.Id == poiId);
-            if (pointOfInterest == null)
-            {
-                return NotFound();
-            }
-
-            pointOfInterest.Name = poi.Name;
-            pointOfInterest.Description = poi.Description;
-
+            await _cityInfoService.UpdatePointOfInterest(cityId, poiId, poi);
             return NoContent();
+        }
+        catch (INotFoundException)
+        {
+            return NotFound();
         }
         catch (Exception e)
         {
@@ -148,7 +116,7 @@ public class PointsOfInterestController : ControllerBase
     }
 
     [HttpPatch("{poiId}")]
-    public ActionResult<PointOfInterestDto> PatchPointOfInterest(
+    public async Task<ActionResult<PointOfInterestDto>> PatchPointOfInterest(
         int cityId,
         int poiId,
         [FromBody] JsonPatchDocument<PointOfInterestForUpdateDto> patchDocument
@@ -156,18 +124,7 @@ public class PointsOfInterestController : ControllerBase
     {
         try
         {
-            var city = _citiesDataStore.Cities.FirstOrDefault(city => city.Id == cityId);
-            if (city == null)
-            {
-                return NotFound();
-            }
-
-            var pointOfInterest = city.PointsOfInterest.FirstOrDefault(p => p.Id == poiId);
-            if (pointOfInterest == null)
-            {
-                return NotFound();
-            }
-
+            var pointOfInterest = await _cityInfoService.GetPointOfInterestForCityById(cityId, poiId, true);
             var poi = new PointOfInterestForUpdateDto()
             {
                 Name = pointOfInterest.Name,
@@ -180,10 +137,13 @@ public class PointsOfInterestController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            pointOfInterest.Name = poi.Name;
-            pointOfInterest.Description = poi.Description;
+            await _cityInfoService.UpdatePointOfInterest(pointOfInterest, poi);
 
             return NoContent();
+        }
+        catch (INotFoundException)
+        {
+            return NotFound();
         }
         catch (Exception e)
         {
@@ -193,26 +153,19 @@ public class PointsOfInterestController : ControllerBase
     }
 
     [HttpDelete("{poiId}")]
-    public ActionResult DeletePointOfInterest(int cityId, int poiId)
+    public async Task<ActionResult> DeletePointOfInterest(int cityId, int poiId)
     {
         try
         {
-            var city = _citiesDataStore.Cities.FirstOrDefault(city => city.Id == cityId);
-            if (city == null)
-            {
-                return NotFound();
-            }
-
-            var pointOfInterest = city.PointsOfInterest.FirstOrDefault(p => p.Id == poiId);
-            if (pointOfInterest == null)
-            {
-                return NotFound();
-            }
-
-            city.PointsOfInterest.Remove(pointOfInterest);
+            await _cityInfoService.DeletePointOfInterest(cityId, poiId);
+            
             _mailer.Send("Point of Interest Deleted", $"POI with id {poiId} for city with id {cityId} has been deleted.");
             
             return NoContent();
+        }
+        catch (INotFoundException)
+        {
+            return NotFound();
         }
         catch (Exception e)
         {
