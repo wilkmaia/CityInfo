@@ -26,9 +26,9 @@ public class CityInfoRepository
             .ToListAsync());
     }
 
-    public async Task<List<CityDto>> GetCities(string? name)
+    public async Task<List<CityDto>> GetCities(string? nameFilter)
     {
-        if (name == null)
+        if (string.IsNullOrWhiteSpace(nameFilter))
         {
             return await GetAllCities();
         }
@@ -36,8 +36,31 @@ public class CityInfoRepository
         return _mapper.Map<List<CityDto>>(await _context.Cities
             .Include(c => c.PointsOfInterest)
             .AsNoTracking()
-            .Where(c => c.Name == name)
+            .Where(c => c.Name == nameFilter)
             .ToListAsync());
+    }
+
+    public async Task<List<CityDto>> GetCities(string? nameFilter, string? searchQuery)
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            return await GetCities(nameFilter);
+        }
+
+        var citiesQuery = _context.Cities
+            .Include(c => c.PointsOfInterest)
+            .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(nameFilter))
+        {
+            citiesQuery = citiesQuery.Where(c => c.Name == nameFilter);
+        }
+
+        var s = searchQuery.Trim();
+        citiesQuery = citiesQuery
+            .Where(c => c.Name.Contains(s) || (c.Description != null && c.Description.Contains(s)));
+
+        return _mapper.Map<List<CityDto>>(await citiesQuery.ToListAsync());
     }
 
     public async Task<CityDto> GetCityById(int cityId, bool track = false)

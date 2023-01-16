@@ -17,9 +17,12 @@ public class CitiesController : ControllerBase
     }
     
     [HttpGet]
-    public async Task<ActionResult<IEnumerator<CityDto>>> GetCities([FromQuery(Name = "nameFilter")] string? name)
+    public async Task<ActionResult<IEnumerator<CityDto>>> GetCities(
+        [FromQuery(Name = "nameFilter")] string? nameFilter,
+        [FromQuery(Name = "searchQuery")] string? searchQuery
+    )
     {
-        var cities = await _cityInfoRepository.GetCities(name);
+        var cities = await _cityInfoRepository.GetCities(nameFilter, searchQuery);
         return Ok(cities);
     }
 
