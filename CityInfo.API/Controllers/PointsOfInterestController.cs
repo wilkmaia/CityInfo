@@ -30,6 +30,12 @@ public class PointsOfInterestController : ControllerBase
         try
         {
             var city = await _cityInfoRepository.GetCityById(cityId);
+            var cityClaim = User.Claims.FirstOrDefault(claim => claim.Type == "city");
+            if (cityClaim?.Value != city.Name)
+            {
+                return Forbid();
+            }
+            
             return Ok(city.PointsOfInterest);
         }
         catch (INotFoundException)
