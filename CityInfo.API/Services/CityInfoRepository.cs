@@ -26,6 +26,20 @@ public class CityInfoRepository
             .ToListAsync());
     }
 
+    public async Task<List<CityDto>> GetCities(string? name)
+    {
+        if (name == null)
+        {
+            return await GetAllCities();
+        }
+
+        return _mapper.Map<List<CityDto>>(await _context.Cities
+            .Include(c => c.PointsOfInterest)
+            .AsNoTracking()
+            .Where(c => c.Name == name)
+            .ToListAsync());
+    }
+
     public async Task<CityDto> GetCityById(int cityId, bool track = false)
     {
         var query = track ? _context.Cities : _context.Cities.AsNoTracking();
