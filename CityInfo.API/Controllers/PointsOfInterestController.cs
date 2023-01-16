@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace CityInfo.API.Controllers;
 
-[Authorize]
+[Authorize(Policy = "MustBeFromTeresina")]
 [ApiController]
 [Route("api/cities/{cityId}/pointsofinterest")]
 public class PointsOfInterestController : ControllerBase

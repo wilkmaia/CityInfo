@@ -35,6 +35,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<FileExtensionContentTypeProvider>();
 builder.Services.AddSqlite<CityInfoContext>("Data Source=CityInfo.db");
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer(options =>
     {
@@ -48,6 +49,15 @@ builder.Services.AddAuthentication("Bearer")
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Authentication:SecretForKey"])),
         };
     });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("MustBeFromTeresina", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("city", "Teresina");
+    });
+});
 
 // Custom services
 #if DEBUG
