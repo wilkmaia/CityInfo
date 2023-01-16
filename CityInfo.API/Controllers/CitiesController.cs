@@ -2,6 +2,7 @@
 using CityInfo.API.Models;
 using CityInfo.API.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace CityInfo.API.Controllers;
 
@@ -10,7 +11,8 @@ namespace CityInfo.API.Controllers;
 public class CitiesController : ControllerBase
 {
     private readonly CityInfoRepository _cityInfoRepository;
-    
+    private const int MaxPageSize = 20;
+
     public CitiesController(CityInfoRepository cityInfoRepository)
     {
         _cityInfoRepository = cityInfoRepository ?? throw new ArgumentNullException(nameof(cityInfoRepository));
@@ -19,10 +21,29 @@ public class CitiesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerator<CityDto>>> GetCities(
         [FromQuery(Name = "nameFilter")] string? nameFilter,
-        [FromQuery(Name = "searchQuery")] string? searchQuery
+        [FromQuery(Name = "searchQuery")] string? searchQuery,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10
     )
     {
-        var cities = await _cityInfoRepository.GetCities(nameFilter, searchQuery);
+        if (pageNumber <= 0)
+        {
+            ModelState.AddModelError(nameof(pageNumber), "Page number should be a positive integer");
+        }
+
+        if (pageSize <= 0)
+        {
+            ModelState.AddModelError(nameof(pageSize), "Page size should be a positive integer");
+        }
+
+        if (ModelState.ErrorCount > 0)
+        {
+            return ValidationProblem();
+        }
+        
+        int normalizedPageSize = new int[] { pageSize, MaxPageSize }.Min();
+        var (cities, paginationMetadata) = await _cityInfoRepository.GetCities(nameFilter, searchQuery, pageNumber, normalizedPageSize);
+        Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
         return Ok(cities);
     }
 

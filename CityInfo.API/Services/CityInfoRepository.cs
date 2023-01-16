@@ -26,27 +26,8 @@ public class CityInfoRepository
             .ToListAsync());
     }
 
-    public async Task<List<CityDto>> GetCities(string? nameFilter)
+    public async Task<(List<CityDto>, PaginationMetadata)> GetCities(string? nameFilter, string? searchQuery, int pageNumber, int pageSize)
     {
-        if (string.IsNullOrWhiteSpace(nameFilter))
-        {
-            return await GetAllCities();
-        }
-
-        return _mapper.Map<List<CityDto>>(await _context.Cities
-            .Include(c => c.PointsOfInterest)
-            .AsNoTracking()
-            .Where(c => c.Name == nameFilter)
-            .ToListAsync());
-    }
-
-    public async Task<List<CityDto>> GetCities(string? nameFilter, string? searchQuery)
-    {
-        if (string.IsNullOrWhiteSpace(searchQuery))
-        {
-            return await GetCities(nameFilter);
-        }
-
         var citiesQuery = _context.Cities
             .Include(c => c.PointsOfInterest)
             .AsNoTracking();
@@ -56,11 +37,24 @@ public class CityInfoRepository
             citiesQuery = citiesQuery.Where(c => c.Name == nameFilter);
         }
 
-        var s = searchQuery.Trim();
-        citiesQuery = citiesQuery
-            .Where(c => c.Name.Contains(s) || (c.Description != null && c.Description.Contains(s)));
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            var s = searchQuery.Trim();
+            citiesQuery = citiesQuery
+                .Where(c => c.Name.Contains(s) || (c.Description != null && c.Description.Contains(s)));
+        }
 
-        return _mapper.Map<List<CityDto>>(await citiesQuery.ToListAsync());
+        citiesQuery = citiesQuery
+            .Skip(pageSize * (pageNumber - 1))
+            .Take(pageSize);
+
+        int totalItemCount = await _context.Cities.CountAsync();
+        PaginationMetadata paginationMetadata = new(totalItemCount, pageSize, pageNumber);
+
+        return (
+            _mapper.Map<List<CityDto>>(await citiesQuery.ToListAsync()),
+            paginationMetadata
+        );
     }
 
     public async Task<CityDto> GetCityById(int cityId, bool track = false)
