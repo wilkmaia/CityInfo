@@ -51,7 +51,16 @@ public class CitiesController : ControllerBase
         return Ok(cities);
     }
 
+    /// <summary>
+    /// Returns information on the city identified by {id}
+    /// </summary>
+    /// <param name="id">if of the city to fetch</param>
+    /// <returns>ActionResult of CityDto</returns>
+    /// <response code="200">Returns the requested city information</response>
     [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CityDto>> GetCity(int id)
     {
         try

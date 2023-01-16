@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using CityInfo.API.Data;
 using CityInfo.API.Services;
@@ -31,7 +32,13 @@ builder.Services.AddControllers(options =>
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(setupAction =>
+{
+    string xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    string xmlCommentsFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFile);
+    
+    setupAction.IncludeXmlComments(xmlCommentsFullPath);
+});
 
 builder.Services.AddSingleton<FileExtensionContentTypeProvider>();
 builder.Services.AddSqlite<CityInfoContext>("Data Source=CityInfo.db");
