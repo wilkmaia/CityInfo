@@ -1,12 +1,14 @@
 ﻿using CityInfo.API.Exceptions;
 using CityInfo.API.Models;
 using CityInfo.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
 namespace CityInfo.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/cities/{cityId}/pointsofinterest")]
 public class PointsOfInterestController : ControllerBase
