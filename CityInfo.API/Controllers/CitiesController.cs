@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace CityInfo.API.Controllers;
 
-[Authorize]
+// [Authorize]
 [ApiController]
-[Route("api/cities")]
+[ApiVersion("1.0")]
+[ApiVersion("2.0")]
+[Route("api/v{version:apiVersion}/cities")]
 public class CitiesController : ControllerBase
 {
     private readonly CityInfoRepository _cityInfoRepository;

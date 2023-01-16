@@ -8,9 +8,10 @@ using Newtonsoft.Json;
 
 namespace CityInfo.API.Controllers;
 
-[Authorize(Policy = "MustBeFromTeresina")]
+// [Authorize(Policy = "MustBeFromTeresina")]
 [ApiController]
-[Route("api/cities/{cityId}/pointsofinterest")]
+[ApiVersion("2.0")]
+[Route("api/v{version:apiVersion}/cities/{cityId}/pointsofinterest")]
 public class PointsOfInterestController : ControllerBase
 {
     private readonly ILogger<PointsOfInterestController> _logger;
@@ -30,11 +31,11 @@ public class PointsOfInterestController : ControllerBase
         try
         {
             var city = await _cityInfoRepository.GetCityById(cityId);
-            var cityClaim = User.Claims.FirstOrDefault(claim => claim.Type == "city");
-            if (cityClaim?.Value != city.Name)
-            {
-                return Forbid();
-            }
+            // var cityClaim = User.Claims.FirstOrDefault(claim => claim.Type == "city");
+            // if (cityClaim?.Value != city.Name)
+            // {
+            //     return Forbid();
+            // }
             
             return Ok(city.PointsOfInterest);
         }
