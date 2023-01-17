@@ -107,6 +107,11 @@ builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection(
 // services.Configure<IpRateLimitPolicies>(Configuration.GetSection("IpRateLimitPolicies"));
 builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
+
 #if DEBUG
 builder.Services.AddTransient<IMailService, LocalMailService>();
 #else
@@ -134,6 +139,8 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.UseResponseCompression();
 
 app.MapControllers();
 
