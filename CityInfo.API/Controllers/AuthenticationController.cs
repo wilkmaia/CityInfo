@@ -51,7 +51,8 @@ public class AuthenticationController : ControllerBase
         }
 
         var securityKey =
-            new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["Authentication:SecretForKey"] ?? string.Empty));
+            new SymmetricSecurityKey(
+                Encoding.ASCII.GetBytes(_configuration["Authentication:SecretForKey"] ?? string.Empty));
         var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         List<Claim> claimsForToken = new()
@@ -74,7 +75,7 @@ public class AuthenticationController : ControllerBase
         return Ok(new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken));
     }
 
-    private CityInfoUser ValidateUserCredentials(string? userName, string? password)
+    private CityInfoUser? ValidateUserCredentials(string? userName, string? password)
     {
         // TODO - move user data to database
         return new CityInfoUser(1, "sampleuser", "Sample", "User", "Teresina");
