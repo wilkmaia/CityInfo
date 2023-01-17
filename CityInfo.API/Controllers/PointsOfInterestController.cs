@@ -11,6 +11,7 @@ namespace CityInfo.API.Controllers;
 [Authorize(Policy = "MustBeFromTeresina")]
 [ApiController]
 [ApiVersion("2.0")]
+[ResponseCache(Duration = 0)]
 [Route("api/v{version:apiVersion}/cities/{cityId}/pointsofinterest")]
 public class PointsOfInterestController : ControllerBase
 {

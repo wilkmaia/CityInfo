@@ -8,6 +8,7 @@ namespace CityInfo.API.Controllers;
 
 [ApiController]
 [Route("api/authentication")]
+[ResponseCache(Duration = 0)]
 public class AuthenticationController : ControllerBase
 {
     public class AuthenticationRequestBody
