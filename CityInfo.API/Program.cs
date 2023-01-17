@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text;
+using AspNetCoreRateLimit;
 using CityInfo.API.Data;
 using CityInfo.API.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -98,7 +99,14 @@ builder.Services.AddApiVersioning(setupAction =>
     setupAction.ReportApiVersions = true;
 });
 
-// Custom services
+builder.Services.AddMemoryCache();
+builder.Services.AddInMemoryRateLimiting();
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+// If there are specific policies for sets of ips
+// See https://github.com/stefanprodan/AspNetCoreRateLimit/wiki/IpRateLimitMiddleware#setup for more information
+// services.Configure<IpRateLimitPolicies>(Configuration.GetSection("IpRateLimitPolicies"));
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
 #if DEBUG
 builder.Services.AddTransient<IMailService, LocalMailService>();
 #else
@@ -108,6 +116,8 @@ builder.Services.AddTransient<IMailService, CloudMailService>();
 builder.Services.AddScoped<CityInfoRepository>();
 
 var app = builder.Build();
+
+app.UseMiddleware<RateLimitingService>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
