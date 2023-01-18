@@ -11,6 +11,7 @@ using Serilog;
 using Serilog.Formatting.Compact;
 using ServiceStack;
 using ServiceStack.Caching;
+using ServiceStack.Redis;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -122,7 +123,9 @@ builder.Services.AddResponseCompression(options =>
 });
 
 var appHost = new GenericAppHost().Init();
-appHost.Register<ICacheClient>(new MemoryCacheClient());
+// appHost.Register<ICacheClient>(new MemoryCacheClient());
+appHost.Register<IRedisClientsManagerAsync>(new RedisManagerPool("SfJ0rDebntftbhNCsoDgLHTu4al1mhKJ@redis-12344.c56.east-us.azure.cloud.redislabs.com:12344"));
+appHost.Register<ICacheClientAsync>(await appHost.Resolve<IRedisClientsManagerAsync>().GetCacheClientAsync());
 builder.Services.AddScoped<CacheService>();
 
 #if DEBUG
