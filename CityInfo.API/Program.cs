@@ -8,12 +8,12 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Serilog.Formatting.Compact;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
-    .WriteTo.Console()
-    .WriteTo.File("logs/cityinfo.txt", rollingInterval: RollingInterval.Day)
-    .CreateLogger();
+    .Enrich.FromLogContext()
+    .CreateBootstrapLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +21,14 @@ var builder = WebApplication.CreateBuilder(args);
 // builder.Logging.ClearProviders();
 // builder.Logging.AddConsole();
 
-builder.Host.UseSerilog();
+builder.Host.UseSerilog((builderContext, services, loggerConfiguration) => loggerConfiguration
+    .Enrich.With<TraceIdInjector>()
+    .Enrich.WithProperty("Application", builderContext.HostingEnvironment.ApplicationName)
+    .Enrich.WithProperty("Environment", builderContext.HostingEnvironment.EnvironmentName)
+    .Enrich.WithProperty("Hostname", System.Net.Dns.GetHostName())
+    .Enrich.FromLogContext()
+    .WriteTo.Console(new RenderedCompactJsonFormatter())
+    .WriteTo.File("logs/cityinfo.txt", rollingInterval: RollingInterval.Day));
 
 // Add services to the container.
 builder.Services.AddControllers(options =>
