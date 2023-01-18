@@ -22,7 +22,7 @@ public class CacheService : Service
     /// <param name="cityId">ID of the Point of Interest's City</param>
     /// <param name="poiId">Point of Interest ID</param>
     /// <returns>The Point of Interest requested or <value>null</value> if it wasn't found</returns>
-    public Task<PointOfInterestDto?> GetPointOfInterest(int cityId, int poiId)
+    internal Task<PointOfInterestDto?> GetPointOfInterest(int cityId, int poiId)
     {
         return CacheAsync.GetAsync<PointOfInterestDto?>(GetUniqueKey<PointOfInterestDto>(cityId, poiId));
     }
@@ -32,7 +32,7 @@ public class CacheService : Service
     /// </summary>
     /// <param name="cityId">City ID</param>
     /// <returns>The city requested or <value>null</value> if it wasn't found</returns>
-    public Task<CityDto?> GetCity(int cityId)
+    internal Task<CityDto?> GetCity(int cityId)
     {
         return CacheAsync.GetAsync<CityDto?>(GetUniqueKey<CityDto>(cityId));
     }
@@ -43,7 +43,7 @@ public class CacheService : Service
     /// <param name="cityId">ID of the Point of Interest's City</param>
     /// <param name="pointOfInterest">The Point of Interest to be stored</param>
     /// <returns><value>true</value> of <value>false</value> indicating whether the operation was successful</returns>
-    public Task<bool> StorePointOfInterest(int cityId, PointOfInterestDto pointOfInterest)
+    internal Task<bool> StorePointOfInterest(int cityId, PointOfInterestDto pointOfInterest)
     {
         return CacheAsync.SetAsync(GetUniqueKey<PointOfInterestDto>(cityId, pointOfInterest.Id), pointOfInterest);
     }
@@ -53,7 +53,7 @@ public class CacheService : Service
     /// </summary>
     /// <param name="city">The City to be stored</param>
     /// <returns><value>true</value> of <value>false</value> indicating whether the operation was successful</returns>
-    public Task<bool> StoreCity(CityDto city)
+    internal Task<bool> StoreCity(CityDto city)
     {
         return CacheAsync.SetAsync(GetUniqueKey<CityDto>(city.Id), city);
     }
@@ -64,7 +64,7 @@ public class CacheService : Service
     /// <param name="cityId">ID of the Point of Interest's City</param>
     /// <param name="poiId">ID of Point of Interest to be removed</param>
     /// <returns><value>true</value> of <value>false</value> indicating whether the operation was successful</returns>
-    public Task<bool> DeletePointOfInterest(int cityId, int poiId)
+    internal Task<bool> DeletePointOfInterest(int cityId, int poiId)
     {
         return CacheAsync.RemoveAsync(GetUniqueKey<PointOfInterestDto>(cityId, poiId));
     }
@@ -74,7 +74,7 @@ public class CacheService : Service
     /// </summary>
     /// <param name="cityId">ID of the City to be removed</param>
     /// <returns><value>true</value> of <value>false</value> indicating whether the operation was successful</returns>
-    public Task<bool> DeleteCity(int cityId)
+    internal Task<bool> DeleteCity(int cityId)
     {
         return CacheAsync.RemoveAsync(GetUniqueKey<CityDto>(cityId));
     }

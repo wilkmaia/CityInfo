@@ -20,11 +20,10 @@ public class CityInfoRepository
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
     }
 
-    private async Task UpdateCityInCache(int cityId)
+    private async Task UpdateCityInCache(CityDto city)
     {
         try
         {
-            var city = await GetCityById(cityId, true);
             await _cache.StoreCity(city);
         }
         catch
@@ -33,11 +32,31 @@ public class CityInfoRepository
         }
     }
 
-    private async Task UpdatePointOfInterestInCache(int cityId, int poiId)
+    private async Task UpdateCityInCache(int cityId)
     {
         try
         {
-            var pointOfInterest = await GetPointOfInterestForCityById(cityId, poiId, true);
+            var city = await _context.Cities
+                .AsNoTracking()
+                .Include(c => c.PointsOfInterest)
+                .SingleOrDefaultAsync(c => c.Id == cityId);
+            
+            if (city != null)
+            {
+                await _cache.StoreCity(_mapper.Map<CityDto>(city));
+            }
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
+    private async Task UpdatePointOfInterestInCache(int cityId, PointOfInterestDto pointOfInterest)
+    {
+        try
+        {
+            await UpdateCityInCache(cityId);
             await _cache.StorePointOfInterest(cityId, pointOfInterest);
         }
         catch
@@ -86,11 +105,6 @@ public class CityInfoRepository
         {
             var cachedCity = await _cache.GetCity(cityId);
             
-#pragma warning disable CS4014
-            // Intentionally not _await_ing
-            UpdateCityInCache(cityId);
-#pragma warning restore CS4014
-            
             if (cachedCity != null)
             {
                 return cachedCity;
@@ -106,7 +120,13 @@ public class CityInfoRepository
             throw new CityNotFoundException("Id", cityId.ToString());
         }
 
-        return _mapper.Map<CityDto>(city);
+        var cityDto = _mapper.Map<CityDto>(city);
+#pragma warning disable CS4014
+        // Intentionally not _await_ing
+        UpdateCityInCache(cityDto);
+#pragma warning restore CS4014
+
+        return cityDto;
     }
 
     public async Task<PointOfInterestDto> GetPointOfInterestForCityById(int cityId, int poiId, bool bypassCache = false)
@@ -114,11 +134,6 @@ public class CityInfoRepository
         if (!bypassCache)
         {
             var cachedPointOfInterest = await _cache.GetPointOfInterest(cityId, poiId);
-
-#pragma warning disable CS4014
-            // Intentionally not _await_ing
-            UpdatePointOfInterestInCache(cityId, poiId);
-#pragma warning restore CS4014
 
             if (cachedPointOfInterest != null)
             {
@@ -135,7 +150,13 @@ public class CityInfoRepository
             throw new PointOfInterestNotFoundException("Id", poiId.ToString());
         }
 
-        return _mapper.Map<PointOfInterestDto>(pointOfInterest);
+        var pointOfInterestDto = _mapper.Map<PointOfInterestDto>(pointOfInterest);
+#pragma warning disable CS4014
+        // Intentionally not _await_ing
+        UpdatePointOfInterestInCache(cityId, pointOfInterestDto);
+#pragma warning restore CS4014
+
+        return pointOfInterestDto;
     }
 
     public async Task<PointOfInterestDto> CreatePointOfInterestForCity(int cityId, PointOfInterestForCreationDto poi)
@@ -149,9 +170,10 @@ public class CityInfoRepository
             .Add(entry);
         await _context.SaveChangesAsync();
 
-        var pointOfInterestDto = _mapper.Map<PointOfInterestDto>(pointOfInterest.Entity);
+        var pointOfInterestDto = _mapper.Map<PointOfInterestDto>(pointOfInterest);
 #pragma warning disable CS4014
-        _cache.StorePointOfInterest(cityId, pointOfInterestDto);
+        // Intentionally not _await_ing
+        UpdatePointOfInterestInCache(cityId, pointOfInterestDto);
 #pragma warning restore CS4014
 
         return pointOfInterestDto;
@@ -170,9 +192,9 @@ public class CityInfoRepository
         _mapper.Map(poi, pointOfInterest);
         await _context.SaveChangesAsync();
         
-        var pointOfInterestDto = _mapper.Map<PointOfInterestDto>(pointOfInterest);
 #pragma warning disable CS4014
-        _cache.StorePointOfInterest(cityId, pointOfInterestDto);
+        // Intentionally not _await_ing
+        UpdatePointOfInterestInCache(cityId, _mapper.Map<PointOfInterestDto>(pointOfInterest));
 #pragma warning restore CS4014
     }
 
@@ -185,6 +207,7 @@ public class CityInfoRepository
         
 #pragma warning disable CS4014
         _cache.DeletePointOfInterest(cityId, poiId);
+        UpdateCityInCache(cityId);
 #pragma warning restore CS4014
     }
 }
