@@ -124,7 +124,8 @@ builder.Services.AddResponseCompression(options =>
 
 var appHost = new GenericAppHost().Init();
 // appHost.Register<ICacheClient>(new MemoryCacheClient());
-appHost.Register<IRedisClientsManagerAsync>(new RedisManagerPool("SfJ0rDebntftbhNCsoDgLHTu4al1mhKJ@redis-12344.c56.east-us.azure.cloud.redislabs.com:12344"));
+appHost.Register<IRedisClientsManagerAsync>(
+    new RedisManagerPool(builder.Configuration["Secrets:Redis:ConnectionString"]));
 appHost.Register<ICacheClientAsync>(await appHost.Resolve<IRedisClientsManagerAsync>().GetCacheClientAsync());
 builder.Services.AddScoped<CacheService>();
 
