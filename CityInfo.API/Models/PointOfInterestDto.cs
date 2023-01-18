@@ -2,10 +2,8 @@
 
 namespace CityInfo.API.Models;
 
-public class PointOfInterestDto
+public class PointOfInterestDto : IBaseModel
 {
-    public int Id { get; set; }
-    
     [Required]
     [MaxLength(50)]
     public string Name { get; set; } = string.Empty;

@@ -11,22 +11,45 @@ public class CityInfoRepository
 {
     private readonly CityInfoContext _context;
     private readonly IMapper _mapper;
+    private readonly CacheService _cache;
 
-    public CityInfoRepository(CityInfoContext context, IMapper mapper)
+    public CityInfoRepository(CityInfoContext context, IMapper mapper, CacheService cache)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
     }
 
-    public async Task<List<CityDto>> GetAllCities()
+    private async Task UpdateCityInCache(int cityId)
     {
-        return _mapper.Map<List<CityDto>>(await _context.Cities
-            .Include(c => c.PointsOfInterest)
-            .AsNoTracking()
-            .ToListAsync());
+        try
+        {
+            var city = await GetCityById(cityId, true);
+            await _cache.StoreCity(city);
+        }
+        catch
+        {
+            // ignored
+        }
     }
 
-    public async Task<(List<CityDto>, PaginationMetadata)> GetCities(string? nameFilter, string? searchQuery, int pageNumber, int pageSize)
+    private async Task UpdatePointOfInterestInCache(int cityId, int poiId)
+    {
+        try
+        {
+            var pointOfInterest = await GetPointOfInterestForCityById(cityId, poiId, true);
+            await _cache.StorePointOfInterest(cityId, pointOfInterest);
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
+    public async Task<(List<CityDto>, PaginationMetadata)> GetCities(string? nameFilter,
+        string? searchQuery,
+        int pageNumber,
+        int pageSize)
     {
         var citiesQuery = _context.Cities
             .Include(c => c.PointsOfInterest)
@@ -57,10 +80,25 @@ public class CityInfoRepository
         );
     }
 
-    public async Task<CityDto> GetCityById(int cityId, bool track = false)
+    public async Task<CityDto> GetCityById(int cityId, bool bypassCache = false)
     {
-        var query = track ? _context.Cities : _context.Cities.AsNoTracking();
-        var city = await query
+        if (!bypassCache)
+        {
+            var cachedCity = await _cache.GetCity(cityId);
+            
+#pragma warning disable CS4014
+            // Intentionally not _await_ing
+            UpdateCityInCache(cityId);
+#pragma warning restore CS4014
+            
+            if (cachedCity != null)
+            {
+                return cachedCity;
+            }
+        }
+
+        var city = await _context.Cities
+            .AsNoTracking()
             .Include(c => c.PointsOfInterest)
             .SingleOrDefaultAsync(c => c.Id == cityId);
         if (city == null)
@@ -71,44 +109,27 @@ public class CityInfoRepository
         return _mapper.Map<CityDto>(city);
     }
 
-    public async Task<List<PointOfInterestDto>> GetAllPointsOfInterestForCity(int cityId)
+    public async Task<PointOfInterestDto> GetPointOfInterestForCityById(int cityId, int poiId, bool bypassCache = false)
     {
-        var city = await _context.Cities
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == cityId);
-        if (city == null)
+        if (!bypassCache)
         {
-            throw new CityNotFoundException("Id", cityId.ToString());
+            var cachedPointOfInterest = await _cache.GetPointOfInterest(cityId, poiId);
+
+#pragma warning disable CS4014
+            // Intentionally not _await_ing
+            UpdatePointOfInterestInCache(cityId, poiId);
+#pragma warning restore CS4014
+
+            if (cachedPointOfInterest != null)
+            {
+                return cachedPointOfInterest;
+            }
         }
-
-        return _mapper.Map<List<PointOfInterestDto>>(city.PointsOfInterest.ToList());
-    }
-
-    public async Task<PointOfInterestDto> GetPointOfInterestById(int poiId)
-    {
+        
         var pointOfInterest = await _context.PointsOfInterest
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == poiId);
-        if (pointOfInterest == null)
-        {
-            throw new PointOfInterestNotFoundException("Id", poiId.ToString());
-        }
-
-        return _mapper.Map<PointOfInterestDto>(pointOfInterest);
-    }
-
-    public async Task<PointOfInterestDto> GetPointOfInterestForCityById(int cityId, int poiId, bool track = false)
-    {
-        var query = track ? _context.Cities : _context.Cities.AsNoTracking();
-        var city = await query
-            .Include(c => c.PointsOfInterest)
-            .FirstOrDefaultAsync(c => c.Id == cityId);
-        if (city == null)
-        {
-            throw new CityNotFoundException("Id", cityId.ToString());
-        }
-
-        var pointOfInterest = city.PointsOfInterest.FirstOrDefault(p => p.Id == poiId);
+            .Where(p => p.CityId == cityId && p.Id == poiId)
+            .FirstOrDefaultAsync();
         if (pointOfInterest == null)
         {
             throw new PointOfInterestNotFoundException("Id", poiId.ToString());
@@ -128,7 +149,12 @@ public class CityInfoRepository
             .Add(entry);
         await _context.SaveChangesAsync();
 
-        return _mapper.Map<PointOfInterestDto>(pointOfInterest.Entity);
+        var pointOfInterestDto = _mapper.Map<PointOfInterestDto>(pointOfInterest.Entity);
+#pragma warning disable CS4014
+        _cache.StorePointOfInterest(cityId, pointOfInterestDto);
+#pragma warning restore CS4014
+
+        return pointOfInterestDto;
     }
 
     public async Task UpdatePointOfInterest(int cityId, int poiId, PointOfInterestForUpdateDto poi)
@@ -143,6 +169,11 @@ public class CityInfoRepository
 
         _mapper.Map(poi, pointOfInterest);
         await _context.SaveChangesAsync();
+        
+        var pointOfInterestDto = _mapper.Map<PointOfInterestDto>(pointOfInterest);
+#pragma warning disable CS4014
+        _cache.StorePointOfInterest(cityId, pointOfInterestDto);
+#pragma warning restore CS4014
     }
 
     public async Task DeletePointOfInterest(int cityId, int poiId)
@@ -151,5 +182,9 @@ public class CityInfoRepository
             .Where(p => p.CityId == cityId && p.Id == poiId)
             .ExecuteDeleteAsync();
         await _context.SaveChangesAsync();
+        
+#pragma warning disable CS4014
+        _cache.DeletePointOfInterest(cityId, poiId);
+#pragma warning restore CS4014
     }
 }

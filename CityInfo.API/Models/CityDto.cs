@@ -5,13 +5,8 @@ namespace CityInfo.API.Models;
 /// <summary>
 /// A DTO for a City
 /// </summary>
-public class CityDto
+public class CityDto : IBaseModel
 {
-    /// <summary>
-    /// City id
-    /// </summary>
-    public int Id { get; set; }
-    
     /// <summary>
     /// City name
     /// </summary>

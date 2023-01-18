@@ -9,6 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Formatting.Compact;
+using ServiceStack;
+using ServiceStack.Caching;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -118,6 +120,10 @@ builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
 });
+
+var appHost = new GenericAppHost().Init();
+appHost.Register<ICacheClient>(new MemoryCacheClient());
+builder.Services.AddScoped<CacheService>();
 
 #if DEBUG
 builder.Services.AddTransient<IMailService, LocalMailService>();
