@@ -170,7 +170,7 @@ public class CityInfoRepository
             .Add(entry);
         await _context.SaveChangesAsync();
 
-        var pointOfInterestDto = _mapper.Map<PointOfInterestDto>(pointOfInterest);
+        var pointOfInterestDto = _mapper.Map<PointOfInterestDto>(pointOfInterest.Entity);
 #pragma warning disable CS4014
         // Intentionally not _await_ing
         UpdatePointOfInterestInCache(cityId, pointOfInterestDto);

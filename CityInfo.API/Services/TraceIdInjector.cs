@@ -9,13 +9,12 @@ namespace CityInfo.API.Services;
 /// </summary>
 public class TraceIdInjector : ILogEventEnricher
 {
+    private static string GetTraceId() => Activity.Current?.Id ?? "test-trace-id";
+
     /// <inheritdoc />
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
-        string? traceId = Activity.Current?.Id;
-        if (traceId != null)
-        {
-            logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("TraceId", Activity.Current?.Id));
-        }
+        var traceId = GetTraceId();
+        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("TraceId", traceId));
     }
 }

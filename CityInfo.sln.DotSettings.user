@@ -1,0 +1,30 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=28a14e6f_002D4723_002D422f_002D8398_002D197a8a25c377/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Enrich_InjectLogEventProperty_TraceIdShouldBeValid #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::0FD9F9F9-9624-47D8-AD35-361AD3C32C57::net6.0::CityInfo.Test.TraceIdInjectorTests.Enrich_InjectLogEventProperty_TraceIdShouldBeValid&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=380c6850_002D525a_002D4d33_002Da9a6_002Db5236826bd89/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Enrich_InjectLogEventProperty_TraceIdShouldBeValid" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::0FD9F9F9-9624-47D8-AD35-361AD3C32C57::net6.0::CityInfo.Test.TraceIdInjectorTests.Enrich_InjectLogEventProperty_TraceIdShouldBeValid&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=535bbb72_002Dea70_002D40ce_002Daa6c_002D819f24b416f9/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Enrich_InjectLogEventProperty_TraceIdShouldBeValid #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::0FD9F9F9-9624-47D8-AD35-361AD3C32C57::net6.0::CityInfo.Test.TraceIdInjectorTests.Enrich_InjectLogEventProperty_TraceIdShouldBeValid&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=57016498_002Df367_002D4381_002D9dfc_002D9c2d6e3e4910/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="PaginationMetadata_ConstructNewObject_TotalPageCountMustBe5" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::0FD9F9F9-9624-47D8-AD35-361AD3C32C57::net6.0::CityInfo.Test.TraceIdInjectorTests.Enrich_InjectLogEventProperty_TraceIdShouldBeValid&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=eb2502a7_002D956e_002D436e_002Da1d8_002D7a12bae4cdb3/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Enrich_InjectLogEventProperty_TraceIdShouldBeValid #4" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::0FD9F9F9-9624-47D8-AD35-361AD3C32C57::net6.0::CityInfo.Test.TraceIdInjectorTests.Enrich_InjectLogEventProperty_TraceIdShouldBeValid&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::0FD9F9F9-9624-47D8-AD35-361AD3C32C57::net6.0::CityInfo.Test.CityInfoRepositoryTests.GetCities_FetchAll_EnsureAllDataIsReceived&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::0FD9F9F9-9624-47D8-AD35-361AD3C32C57::net6.0::CityInfo.Test.CityInfoRepositoryTests.GetCityById_FetchSingleCity_EnsureAllDataIsReceived&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::0FD9F9F9-9624-47D8-AD35-361AD3C32C57::net6.0::CityInfo.Test.CityInfoRepositoryTests.GetCities_FetchAllCities_EnsureAllDataIsReceived&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::0FD9F9F9-9624-47D8-AD35-361AD3C32C57::net6.0::CityInfo.Test.CityInfoRepositoryTests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
